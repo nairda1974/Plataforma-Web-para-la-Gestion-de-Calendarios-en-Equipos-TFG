@@ -1,0 +1,22 @@
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: 279024062971-uspchj03rsik6dok9mbf9vrb50j1i1oi.apps.googleusercontent.com
+            client-secret: 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
+            scope:
+              - email
+              - profile
+              - https://www.googleapis.com/auth/calendar
+            redirect-uri: "{baseUrl}/login/oauth2/code/google"
+            client-name: Google
+            authorization-grant-type: authorization_code
+        provider:
+          google:
+            authorization-uri: https://accounts.google.com/o/oauth2/v2/auth?access_type=offline&prompt=consent
+            token-uri: https://oauth2.googleapis.com/token
+            user-info-uri: https://www.googleapis.com/oauth2/v3/userinfo
+            user-name-attribute: email
+
