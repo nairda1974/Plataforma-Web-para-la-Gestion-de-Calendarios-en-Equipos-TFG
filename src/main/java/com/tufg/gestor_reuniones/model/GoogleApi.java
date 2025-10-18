@@ -10,11 +10,13 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 public class GoogleApi {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
 
-    // datetime(6) -> LocalDateTime
+    @Column(name = "fecha")
     private LocalDateTime fecha;
 
     @Column(name = "google_calendar_api")
@@ -25,5 +27,4 @@ public class GoogleApi {
 
     @Column(name = "token_acceso")
     private String tokenAcceso;
-
 }
