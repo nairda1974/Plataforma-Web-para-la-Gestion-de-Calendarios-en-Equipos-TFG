@@ -16,6 +16,7 @@ import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.component.dependency.CssImport;
+import com.vaadin.flow.spring.security.AuthenticationContext;
 
 @Route("login")
 @PageTitle("Iniciar Sesión")
@@ -24,8 +25,9 @@ import com.vaadin.flow.component.dependency.CssImport;
 public class LoginView extends VerticalLayout implements BeforeEnterObserver {
 
     private final LoginForm loginForm = new LoginForm();
-
-    public LoginView() {
+    private final AuthenticationContext authenticationContext;
+    public LoginView(AuthenticationContext authenticationContext) {
+        this.authenticationContext = authenticationContext;
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -136,6 +138,9 @@ public class LoginView extends VerticalLayout implements BeforeEnterObserver {
                 .getParameters()
                 .containsKey("error")) {
             loginForm.setError(true);
+        }
+        if (authenticationContext.isAuthenticated()) {
+            event.forwardTo(HomeView.class);
         }
     }
 }

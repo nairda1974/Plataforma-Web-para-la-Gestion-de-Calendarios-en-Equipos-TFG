@@ -1,7 +1,5 @@
 package com.tufg.gestor_reuniones.view;
 
-import com.tufg.gestor_reuniones.model.Disponibilidad;
-import com.tufg.gestor_reuniones.model.GoogleApi;
 import com.tufg.gestor_reuniones.model.Usuario;
 import com.tufg.gestor_reuniones.service.GoogleApiService;
 import com.tufg.gestor_reuniones.service.UsuarioService;
@@ -14,26 +12,16 @@ import com.vaadin.flow.component.formlayout.FormLayout;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
-import com.vaadin.flow.component.login.LoginForm;
-import com.vaadin.flow.component.login.LoginI18n;
 import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
-import com.vaadin.flow.component.textfield.PasswordField;
-import com.vaadin.flow.component.textfield.TextField;
-import com.vaadin.flow.component.timepicker.TimePicker;
-import com.vaadin.flow.router.BeforeEnterEvent;
-import com.vaadin.flow.router.BeforeEnterObserver;
 import com.vaadin.flow.router.PageTitle;
 import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.component.dependency.CssImport; // <-- Importante
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 
 import java.time.*;
 import java.util.*;
@@ -45,8 +33,8 @@ import java.util.stream.Collectors;
 @CssImport("./styles/login-view.css")
 public class Registro2View extends VerticalLayout {
     private FormLayout registrationForm = new FormLayout();;
-    private Map<String,TimePicker> horaInicio;
-    private Map <String,TimePicker> horaFin;
+
+
     private MultiSelectComboBox depslegableCalendario;
     private ComboBox zonaHorariaDesplegable;
     private final HttpServletRequest request;
@@ -61,8 +49,7 @@ public class Registro2View extends VerticalLayout {
     public Registro2View(GoogleApiService googleApiService,HttpServletRequest request) {
         this.request = request;
         this.googleApiService = googleApiService;
-        this.horaInicio = new HashMap<>();
-        this.horaFin = new HashMap<>();
+
 
         setSizeFull();
         setAlignItems(Alignment.CENTER);
@@ -89,7 +76,7 @@ public class Registro2View extends VerticalLayout {
         registrationForm.getElement().executeJs("this.shadowRoot.querySelector('[part=\"header\"]')?.remove();");
         registrationForm.getStyle().set("padding", "1");
         registrationForm.getStyle().set("box-shadow", "none");
-        registrationForm.add(zonaHorariaDesplegable, depslegableCalendario, crearHorario(), siguienteBoton());
+        registrationForm.add(zonaHorariaDesplegable, depslegableCalendario, siguienteBoton());
 // Añadir mensaje inverso de registro
         HorizontalLayout registradoLayout = new HorizontalLayout();
         registradoLayout.setDefaultVerticalComponentAlignment(Alignment.BASELINE);
@@ -115,7 +102,7 @@ public class Registro2View extends VerticalLayout {
         List<String> listaCalendario = googleApiService.listadoGoogleCalendar(accessToken);
         MultiSelectComboBox<String> calendarioDesplegable = new MultiSelectComboBox<>("Selecciona tus calendarios");
         calendarioDesplegable.setItems(listaCalendario);
-        calendarioDesplegable.select(listaCalendario.get(0)); // selecciona el primero por defecto (opcional)
+        calendarioDesplegable.select(listaCalendario.get(0));
         calendarioDesplegable.setWidthFull();
         return calendarioDesplegable;
     }
@@ -133,60 +120,7 @@ public class Registro2View extends VerticalLayout {
         return zonaHorariaDesplegable;
     }
 
-    private VerticalLayout crearHorario() {
-        List<String> diasSemana = List.of("Lunes", "Martes", "Miércoles",
-                "Jueves", "Viernes", "Sábado", "Domingo");
 
-        VerticalLayout horarioLayout = new VerticalLayout();
-        horarioLayout.setSpacing(true);
-        horarioLayout.setPadding(false);
-        horarioLayout.setWidthFull();
-
-        H3 header = new H3("Define tu disponibilidad horaria");
-        header.getStyle().set("margin-bottom", "1rem");
-        horarioLayout.add(header);
-
-        for (String dia : diasSemana) {
-            HorizontalLayout diaLayout = new HorizontalLayout();
-            diaLayout.setWidthFull();
-            diaLayout.setSpacing(true);
-            diaLayout.setAlignItems(Alignment.CENTER);
-            diaLayout.setDefaultVerticalComponentAlignment(Alignment.CENTER);
-
-            Span diaSpan = new Span(dia + ":");
-            diaSpan.setWidth("100px");
-            diaSpan.getStyle()
-                    .set("font-weight", "500")
-                    .set("text-align", "right")
-                    .set("padding-right", "0.5rem");
-
-            TimePicker inicio = new TimePicker();
-            inicio.setPlaceholder("Inicio");
-            inicio.setStep(Duration.ofMinutes(30));
-            inicio.setValue(LocalTime.of(9, 0));
-            inicio.setWidth("150px");
-            inicio.setLocale(new Locale("es", "ES"));
-
-            Span guion = new Span("—");
-            guion.getStyle()
-                    .set("margin", "0 0.2rem")
-                    .set("color", "var(--lumo-secondary-text-color)");
-
-            TimePicker fin = new TimePicker();
-            fin.setPlaceholder("Fin");
-            fin.setStep(Duration.ofMinutes(30));
-            fin.setValue(LocalTime.of(18, 0));
-            fin.setWidth("150px");
-            fin.setLocale(new Locale("es", "ES"));
-
-            diaLayout.add(diaSpan, inicio, guion, fin);
-            horarioLayout.add(diaLayout);
-            horaInicio.put(dia, inicio);
-            horaFin.put(dia, fin);
-        }
-
-        return horarioLayout;
-    }
 
     private Button siguienteBoton() {
         Button siguiente = new Button("Crear Usuario", new Icon(VaadinIcon.ARROW_RIGHT));
@@ -206,18 +140,6 @@ public class Registro2View extends VerticalLayout {
     private Button validacionesBotonSiguiente( Button siguiente){
         siguiente.addClickListener(e -> {
             boolean error = false;
-            if (horaInicio.isEmpty() || horaFin.isEmpty()) {
-                Notification.show("Debes de introducir al menos el horario que estás disponible al menos un dia.");
-                error = true;
-            }
-            List<String> diasSemana = List.of("Lunes", "Martes", "Miércoles",
-                    "Jueves", "Viernes", "Sábado", "Domingo");
-            for(String dia: diasSemana){
-                if(!horaInicio.get(dia).getValue().isBefore(horaFin.get(dia).getValue())) {
-                    error = true;
-                    Notification.show("La hora de inicio del "+ dia + " debe de ser menor que la hora final.");
-                }
-            }
             if(depslegableCalendario.isEmpty()){
                 error = true;
                 Notification.show("Es obligatorio seleccionar al menos un calendario.");
@@ -238,39 +160,17 @@ public class Registro2View extends VerticalLayout {
             if (error)
                 return;
 
-            Usuario usuario = setUsuario(correo,contrasenia);
-            GoogleApi googleApi = googleApiService.almacenarGoogleApi(setGoogleApi(new GoogleApi()));
-            usuarioService.registrarUsuario(usuario, setListadoDisponibilidad(),  googleApi);
+            String refreshToken = (String) request.getSession().getAttribute("refreshToken");
+            Usuario usuario = setUsuario(correo, contrasenia);
+            usuario.setGoogleRefreshToken(refreshToken);
+            usuarioService.registrarUsuario(usuario);
             getUI().ifPresent(ui -> ui.navigate("login"));
         });
         return siguiente;
     }
-private GoogleApi setGoogleApi(GoogleApi googleApi){
-    googleApi.setTokenAcceso((String) request.getSession().getAttribute("accessToken"));
-    googleApi.setRefreshToken((String) request.getSession().getAttribute("refreshToken"));
-    return googleApi;
-}
 
-    private List<Disponibilidad> setListadoDisponibilidad(){
-        List<Disponibilidad> disponibilidadLista = new ArrayList<>();
-        List<String> diasSemana = List.of("Lunes", "Martes", "Miércoles",
-                "Jueves", "Viernes", "Sábado", "Domingo");
-        for(String dia: diasSemana){
-            Disponibilidad disponibilidad = new Disponibilidad();
-            LocalTime inicio = horaInicio.get(dia).getValue();
-            LocalTime fin = horaFin.get(dia).getValue();
-            LocalDate fecha = LocalDate.now();     // fecha actual
 
-            LocalDateTime inicioDate = LocalDateTime.of(fecha, inicio);
-            LocalDateTime finDate = LocalDateTime.of(fecha, fin);
 
-            disponibilidad.setDia(dia);
-            disponibilidad.setFechaInicio(inicioDate);
-            disponibilidad.setFechaFin(finDate);
-            disponibilidadLista.add(disponibilidad);
-        }
-        return disponibilidadLista;
-    }
 
     private Usuario setUsuario(String correo, String contrasenia){
         Usuario usuario = new Usuario();

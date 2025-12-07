@@ -12,12 +12,15 @@ import java.util.List;
 @Getter
 @Setter
 public class Usuario {
-
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_usuario")
+    private Integer id;
+
     @Column(name = "correo")
     private String correo;
 
-    @Column(name = "contraseña")
+    @Column(name = "contrasenia")
     private String contrasenia;
 
     @Column(name = "huso_horario")
@@ -26,10 +29,6 @@ public class Usuario {
     @Column(name = "google_calendar_token")
     private String googleCalendarToken;
 
-    @OneToOne
-    @JoinColumn(name = "google_api_id", referencedColumnName = "id")
-    private GoogleApi googleApiId;
-
-    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
-    private List<Disponibilidad> disponibilidadId;
+    @Column(name = "google_refresh_token", columnDefinition = "TEXT")
+    private String googleRefreshToken;
 }

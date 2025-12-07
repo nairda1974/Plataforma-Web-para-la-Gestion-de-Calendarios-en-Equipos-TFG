@@ -1,7 +1,6 @@
 package com.tufg.gestor_reuniones.service;
 
 import com.tufg.gestor_reuniones.model.Disponibilidad;
-import com.tufg.gestor_reuniones.model.GoogleApi;
 import com.tufg.gestor_reuniones.model.Usuario;
 import com.tufg.gestor_reuniones.repository.DisponibilidadRepository;
 import com.tufg.gestor_reuniones.repository.UsuarioRepository;
@@ -28,26 +27,27 @@ public class UsuarioService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String correo) throws UsernameNotFoundException {
-        Usuario usuario = usuarioRepository.findById(correo)
+        Usuario usuario = usuarioRepository.findByCorreo(correo)
                 .orElseThrow(() -> new UsernameNotFoundException("No existe usuario con correo: " + correo));
 
         return User.withUsername(usuario.getCorreo())
                 .password(usuario.getContrasenia())
-                .authorities("USER") // autoridad genérica
                 .build();
     }
     public Usuario findByCorreo(String correo) {
-        return usuarioRepository.findById(correo).orElse(null);
+        return usuarioRepository.findByCorreo(correo).orElse(null);
     }
 
-    public void registrarUsuario(Usuario usuario, List<Disponibilidad> disponibilidadLista, GoogleApi googleApi){
-        Usuario usuarioTemporal = usuario;
-        usuarioTemporal.setGoogleApiId(googleApi);
-        Usuario usuarioBBDD = usuarioRepository.save(usuarioTemporal);
-        // disponibilidadRepository.saveAll(setUsuarioDisponibilidad(disponibilidadLista,usuarioBBDD));
+    public void registrarUsuario(Usuario usuario){
+        usuarioRepository.save(usuario);
     }
 
-    private List<Disponibilidad> setUsuarioDisponibilidad(List<Disponibilidad> disponibilidadLista, Usuario usuario){
+    public List<String> obtenerCorreos(String correoConsulta){
+        return usuarioRepository.correos(correoConsulta);
+    }
+
+
+    /*private List<Disponibilidad> setUsuarioDisponibilidad(List<Disponibilidad> disponibilidadLista, Usuario usuario){
         List<Disponibilidad> disponibilidadConUsuario = new ArrayList<>();
 
         for(Disponibilidad disponibilidad: disponibilidadLista){
@@ -55,7 +55,7 @@ public class UsuarioService implements UserDetailsService {
             disponibilidadConUsuario.add(disponibilidad);
         }
         return disponibilidadConUsuario;
-    }
+    }*/
 
 
 }

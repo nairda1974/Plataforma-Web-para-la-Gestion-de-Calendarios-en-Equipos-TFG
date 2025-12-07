@@ -8,8 +8,6 @@ import com.google.api.services.calendar.model.CalendarListEntry;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.AccessToken;
 import com.google.auth.oauth2.GoogleCredentials;
-import com.tufg.gestor_reuniones.model.GoogleApi;
-import com.tufg.gestor_reuniones.repository.GoogleApiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -21,8 +19,6 @@ import java.util.List;
 @Service
 public class GoogleApiService {
     public static final String GOOGLE_CALENDAR_LIST_SCOPE = "https://www.googleapis.com/auth/calendar.readonly";
-    @Autowired
-    private GoogleApiRepository googleApiRepository;
     public GoogleApiService(){
     }
 
@@ -57,9 +53,6 @@ public class GoogleApiService {
                 throw new RuntimeException(e);
             }
         }
-    }
-    public GoogleApi almacenarGoogleApi(GoogleApi googleApi){
-        return googleApiRepository.save(googleApi);
     }
 
 }

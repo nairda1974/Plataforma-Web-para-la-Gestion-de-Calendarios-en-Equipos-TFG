@@ -1,11 +1,9 @@
 package com.tufg.gestor_reuniones.model;
 
-import com.tufg.gestor_reuniones.model.Usuario;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 @Entity
 @Table(name = "disponibilidad")
@@ -16,21 +14,18 @@ public class Disponibilidad {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_disponibilidad")
-    private Long id;
-
-    @Column(name = "dia")
-    private String dia;
-
-    @Column(name = "fecha_inicio")
-    private LocalDateTime fechaInicio;
-
-    @Column(name = "fecha_fin")
-    private LocalDateTime fechaFin;
-
-    @Column(name = "dia_semana")
-    private String diaSemana;
+    private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "usuario_id", referencedColumnName = "correo")
-    private Usuario usuario;
+    @JoinColumn(name = "evento_id")
+    private Evento evento;
+
+    @Column(name = "dia_semana")
+    private Integer diaSemana;
+
+    @Column(name = "hora_inicio")
+    private LocalTime horaInicio;
+
+    @Column(name = "hora_fin")
+    private LocalTime horaFin;
 }
