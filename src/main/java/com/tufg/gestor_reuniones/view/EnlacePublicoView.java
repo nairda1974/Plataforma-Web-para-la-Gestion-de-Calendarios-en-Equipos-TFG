@@ -1,10 +1,13 @@
 package com.tufg.gestor_reuniones.view;
 
+import com.tufg.gestor_reuniones.dto.RangoEvento;
 import com.tufg.gestor_reuniones.model.Evento;
 import com.tufg.gestor_reuniones.model.Usuario;
 import com.tufg.gestor_reuniones.repository.DisponibilidadRepository;
 import com.tufg.gestor_reuniones.repository.EventoRepository;
+import com.tufg.gestor_reuniones.service.EnlaceService;
 import com.tufg.gestor_reuniones.service.EventoService;
+import com.tufg.gestor_reuniones.service.GoogleApiService;
 import com.tufg.gestor_reuniones.service.UsuarioService;
 import com.vaadin.flow.component.UI;
 import com.vaadin.flow.component.avatar.Avatar;
@@ -15,6 +18,7 @@ import com.vaadin.flow.component.grid.Grid;
 import com.vaadin.flow.component.html.*;
 import com.vaadin.flow.component.icon.Icon;
 import com.vaadin.flow.component.icon.VaadinIcon;
+import com.vaadin.flow.component.notification.Notification;
 import com.vaadin.flow.component.orderedlayout.HorizontalLayout;
 import com.vaadin.flow.component.orderedlayout.Scroller;
 import com.vaadin.flow.component.orderedlayout.VerticalLayout;
@@ -30,7 +34,9 @@ import com.vaadin.flow.router.Route;
 import com.vaadin.flow.server.auth.AnonymousAllowed;
 import com.vaadin.flow.theme.lumo.LumoUtility;
 import jakarta.annotation.security.PermitAll;
+import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
@@ -43,14 +49,18 @@ import java.util.Optional;
 public class EnlacePublicoView extends VerticalLayout implements HasUrlParameter<String> {
     public EventoService eventoService;
     public Evento evento;
-    public EnlacePublicoView(EventoRepository eventoRepository, UsuarioService usuarioService, DisponibilidadRepository disponibilidadRepository ) {
+    private final GoogleApiService googleApiService;
+    @Autowired
+    public DisponibilidadRepository disponibilidadRepository;
+    public EnlacePublicoView(EventoRepository eventoRepository, UsuarioService usuarioService, DisponibilidadRepository disponibilidadRepository,
+                             GoogleApiService googleApiService) {
         // Header
         setSizeFull();
         H1 cabecera = new H1("Gestor de Reuniones");
         cabecera.getElement().getStyle().set("text-align", "center");
-
+        this.googleApiService = googleApiService;
         this.eventoService = new EventoService(eventoRepository, usuarioService , disponibilidadRepository);
-
+        this.disponibilidadRepository = disponibilidadRepository;
         HorizontalLayout header = new HorizontalLayout(cabecera);
         header.setAlignItems(Alignment.CENTER);
         header.setFlexGrow(1, cabecera);
@@ -145,25 +155,139 @@ public class EnlacePublicoView extends VerticalLayout implements HasUrlParameter
         return izquierdaLayout;
     }
 
-    private VerticalLayout derechaLayout(){
+//    private VerticalLayout derechaLayout(){
+//        VerticalLayout derechaLayout = new VerticalLayout();
+//        derechaLayout.setWidthFull();
+//        derechaLayout.add(new H3("Detalles"));
+//        Span descripcionTexto = new Span(evento.getDescripcion());
+//        descripcionTexto.getStyle().set("white-space", "pre-wrap");
+//        derechaLayout.getStyle().set("background-color", "#F8F9FA");
+//        derechaLayout.getStyle().set("border-left", "1px solid #ddd");
+//        EmailField correo = new EmailField("Correo");
+//
+//        DatePicker fechaReunión = new DatePicker("Fecha Reunión");
+//        TimePicker horaReunion = new TimePicker("Hora Reunión");
+//
+//        Button finalizar = new Button("Finalizar");
+//
+//        derechaLayout.add(descripcionTexto,correo,fechaReunión,horaReunion,finalizar);
+//
+//        return derechaLayout;
+//    }
+
+    private VerticalLayout derechaLayout() {
         VerticalLayout derechaLayout = new VerticalLayout();
         derechaLayout.setWidthFull();
+        derechaLayout.getStyle().set("background-color", "#F8F9FA");
+        derechaLayout.getStyle().set("border-left", "1px solid #ddd");
+        derechaLayout.setPadding(true);
+
+        // 1. Elementos Visuales Estándar
         derechaLayout.add(new H3("Detalles"));
         Span descripcionTexto = new Span(evento.getDescripcion());
         descripcionTexto.getStyle().set("white-space", "pre-wrap");
-        derechaLayout.getStyle().set("background-color", "#F8F9FA");
-        derechaLayout.getStyle().set("border-left", "1px solid #ddd");
-        EmailField correo = new EmailField("Correo");
 
-        DatePicker fechaReunión = new DatePicker("Fecha Reunión");
+        EmailField correo = new EmailField("Tu Correo");
+        correo.setWidthFull();
+
+        DatePicker fechaReunion = new DatePicker("Fecha Reunión");
+        fechaReunion.setWidthFull();
+        fechaReunion.setValue(java.time.LocalDate.now()); // Por defecto hoy para facilitar el test
+
         TimePicker horaReunion = new TimePicker("Hora Reunión");
+        horaReunion.setWidthFull();
 
-        Button finalizar = new Button("Finalizar");
+        Button finalizar = new Button("Finalizar Reserva");
+        finalizar.addThemeVariants(ButtonVariant.LUMO_PRIMARY);
+        finalizar.setWidthFull();
 
-        derechaLayout.add(descripcionTexto,correo,fechaReunión,horaReunion,finalizar);
+        // ============================================================
+        // ZONA DE PRUEBAS (SOLO PARA DESARROLLO)
+        // ============================================================
+        H3 tituloTest = new H3("🧪 Zona de Test Google Calendar");
+        tituloTest.getStyle().set("color", "red");
+
+        Button btnTest = new Button("Consultar Disponibilidad Anfitrión", new Icon(VaadinIcon.SEARCH));
+        TextArea areaResultados = new TextArea("Resultados de la llamada:");
+        areaResultados.setWidthFull();
+        areaResultados.setHeight("150px");
+        areaResultados.setReadOnly(true);
+
+        btnTest.addClickListener(e -> {
+            try {
+                // A. Obtener datos necesarios
+                if (evento.getAnfitriones().isEmpty()) {
+                    Notification.show("Error: Este evento no tiene anfitriones asignados.");
+                    return;
+                }
+                // Cogemos al primer anfitrión del Set
+                Usuario anfitrion = evento.getAnfitriones().iterator().next();
+
+                String token = anfitrion.getGoogleRefreshToken();
+                String zona = anfitrion.getHusoHorario();
+                LocalDate dia = fechaReunion.getValue();
+
+                // Validaciones rápidas para el test
+                if (token == null || token.isEmpty()) {
+                    areaResultados.setValue("ERROR: El anfitrión (" + anfitrion.getCorreo() + ") no tiene Refresh Token vinculado.");
+                    return;
+                }
+                if (zona == null) zona = "Europe/Madrid"; // Fallback
+                if (dia == null) dia = java.time.LocalDate.now();
+
+                // B. Llamada al Servicio (Probamos con el calendario 'primary')
+                // Nota: En producción usarías la lista de calendarios guardada en BBDD,
+                // aquí forzamos "primary" para verificar que la conexión funciona.
+                List<String> calendariosAProbar = List.of("primary");
+
+                areaResultados.setValue("Consultando Google API para " + anfitrion.getCorreo() + " el día " + dia + "...");
+
+                List<RangoEvento> resultados = googleApiService.obtenerCalendariosGoogle(
+                        token,
+                        dia,
+                        zona,
+                        calendariosAProbar
+                );
+                EnlaceService enlace = new EnlaceService(disponibilidadRepository);
+                enlace.calcularDisponibilidad(resultados,evento,dia);
+
+                // C. Mostrar Resultados
+                StringBuilder sb = new StringBuilder();
+                sb.append("✅ ÉXITO. Se encontraron ").append(resultados.size()).append(" bloqueos:\n");
+
+                if (resultados.isEmpty()) {
+                    sb.append("-> El usuario está totalmente libre este día (0 eventos).");
+                } else {
+                    for (RangoEvento rango : resultados) {
+                        sb.append("🔴 Ocupado: ")
+                                .append(rango.getHoraInicio().toLocalTime())
+                                .append(" - ")
+                                .append(rango.getHoraFin().toLocalTime())
+                                .append("\n");
+                    }
+                }
+                areaResultados.setValue(sb.toString());
+
+            } catch (Exception ex) {
+                areaResultados.setValue("❌ EXCEPCIÓN: " + ex.getMessage());
+                ex.printStackTrace();
+            }
+        });
+
+        // Añadimos todo al layout
+        derechaLayout.add(
+                descripcionTexto,
+                correo,
+                fechaReunion,
+                horaReunion,
+                finalizar,
+                new Hr(), // Separador visual
+                tituloTest,
+                btnTest,
+                areaResultados
+        );
+        // ============================================================
 
         return derechaLayout;
     }
-
-
 }
