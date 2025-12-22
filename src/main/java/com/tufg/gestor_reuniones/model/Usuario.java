@@ -26,9 +26,13 @@ public class Usuario {
     @Column(name = "huso_horario")
     private String husoHorario;
 
-    @Column(name = "google_calendar_token")
-    private String googleCalendarToken;
+    @OneToMany(mappedBy = "usuario", cascade = CascadeType.ALL)
+    private List<Calendario> calendarios;
 
     @Column(name = "google_refresh_token", columnDefinition = "TEXT")
     private String googleRefreshToken;
+
+    @OneToMany(mappedBy = "creador")
+    private List<Evento> evento;
+
 }

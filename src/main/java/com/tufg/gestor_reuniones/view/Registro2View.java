@@ -38,19 +38,16 @@ public class Registro2View extends VerticalLayout {
     private MultiSelectComboBox depslegableCalendario;
     private ComboBox zonaHorariaDesplegable;
     private final HttpServletRequest request;
-    @Autowired
     private GoogleApiService googleApiService;
-    @Autowired
     private UsuarioService usuarioService;
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private PasswordEncoder contraseniaEncoder;
 
 
-    public Registro2View(GoogleApiService googleApiService,HttpServletRequest request) {
+    public Registro2View(GoogleApiService googleApiService,HttpServletRequest request, UsuarioService usuarioService,PasswordEncoder contraseniaEncoder) {
         this.request = request;
         this.googleApiService = googleApiService;
-
-
+        this.usuarioService = usuarioService;
+        this.contraseniaEncoder = contraseniaEncoder;
         setSizeFull();
         setAlignItems(Alignment.CENTER);
         setJustifyContentMode(JustifyContentMode.CENTER);
@@ -164,7 +161,7 @@ public class Registro2View extends VerticalLayout {
             Usuario usuario = setUsuario(correo, contrasenia);
             usuario.setGoogleRefreshToken(refreshToken);
             usuarioService.registrarUsuario(usuario);
-            getUI().ifPresent(ui -> ui.navigate("login"));
+            getUI().ifPresent(ui -> ui.navigate("logout"));
         });
         return siguiente;
     }
@@ -174,7 +171,7 @@ public class Registro2View extends VerticalLayout {
 
     private Usuario setUsuario(String correo, String contrasenia){
         Usuario usuario = new Usuario();
-        usuario.setContrasenia(passwordEncoder.encode(contrasenia));
+        usuario.setContrasenia(contraseniaEncoder.encode(contrasenia));
         usuario.setCorreo(correo);
         usuario.setHusoHorario(zonaHorariaDesplegable.getValue().toString());
         return usuario;

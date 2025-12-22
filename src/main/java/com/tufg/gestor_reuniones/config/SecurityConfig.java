@@ -30,12 +30,7 @@ public class SecurityConfig extends VaadinWebSecurity {
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers(new AntPathRequestMatcher("/registro1")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/oauth2/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/login/oauth2/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/images/**")).permitAll()
-                .requestMatchers(new AntPathRequestMatcher("/reunion/**")).permitAll()
-
+                .requestMatchers("/registro1","/oauth2/**", "/login/oauth2/**", "/reunion/**").permitAll()
         );
         http.oauth2Login(oauth2 -> oauth2
                 .loginPage("/registro1")
@@ -49,7 +44,8 @@ public class SecurityConfig extends VaadinWebSecurity {
         );
 
         http.logout(logout -> logout
-                .logoutSuccessUrl("/")
+                .logoutSuccessUrl("/logout")
+                .invalidateHttpSession(true)
                 .permitAll()
         );
 
@@ -63,8 +59,6 @@ public class SecurityConfig extends VaadinWebSecurity {
 
         web.ignoring().requestMatchers(
                 new AntPathRequestMatcher("/css/**"),
-                new AntPathRequestMatcher("/js/**"),
-                new AntPathRequestMatcher("/images/**"),
                 new AntPathRequestMatcher("/favicon.ico"),
                 new AntPathRequestMatcher("/fonts/**")
 

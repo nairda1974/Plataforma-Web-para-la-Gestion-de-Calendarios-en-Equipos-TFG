@@ -27,20 +27,20 @@ public class EnlaceService {
         List<Disponibilidad> listaDisponibilidad = obtenerListaDisponibilidad(evento);
         Disponibilidad disponibilidad = null;
         List<LocalTime> listaHorarioDisponible = new ArrayList<>();
-        Integer Duracion = evento.getDuracion();
         if (listaDisponibilidad == null || listaDisponibilidad.isEmpty())
             throw new NullPointerException("No existe disponibilidad asociada a la reunión");
         disponibilidad = disponibilidadDia(dia.getDayOfWeek().getValue(),listaDisponibilidad);
         if(disponibilidad == null){
             return null; // El dia seleccionado por el usuario no esta entre los dias disponibles de la reunion
         }
-        TemporalAmount duracion = Duration.ofMinutes(evento.getDuracion());
+        TemporalAmount duracionEvento = Duration.ofMinutes(evento.getDuracion());
         for (LocalTime disponible = disponibilidad.getHoraInicio();
-             disponible.isBefore(disponibilidad.getHoraFin());
-             disponible = disponible.plus(duracion)){
+             disponible.isBefore(disponibilidad.getHoraFin()) &&
+             disponibilidad.getHoraFin().isBefore(disponible.plus(Duration.ofMinutes(evento.getDuracion())));
+             disponible = disponible.plus(Duration.ofMinutes(15))){
             boolean conflicto = false;
             for(RangoEvento rangoEvento1: rangoEvento){
-                if(conflictoDisponibilidad(rangoEvento1,disponible)){
+                if(conflictoDisponibilidad(rangoEvento1,disponible,disponible.plus(duracionEvento))){
                     conflicto = true;
                 }
             }
@@ -62,10 +62,23 @@ public class EnlaceService {
         }
         return disponibilidadResultado;
     }
-    private boolean conflictoDisponibilidad(RangoEvento evento, LocalTime horaDisponible){
-        LocalTime inicio = evento.getHoraInicio().toLocalTime();
-        LocalTime fin = evento.getHoraFin().toLocalTime();
-        return inicio.isAfter(horaDisponible) && fin.isBefore(horaDisponible) ||
-                inicio.equals(horaDisponible) || fin.equals(horaDisponible);
+
+    // Calcula todos los posibles en el que puede tener conflictos al crear una reunion según los eventos en el calendario de google
+    private boolean conflictoDisponibilidad(RangoEvento evento, LocalTime horaInicioReunion,LocalTime horaFinReunion){
+        LocalTime eventoInicio = evento.getHoraInicio().toLocalTime();
+        LocalTime eventoFin = evento.getHoraFin().toLocalTime();
+
+        boolean inicioReunionEntreEvento = (horaInicioReunion.isAfter(eventoInicio) || horaInicioReunion.equals(eventoInicio))
+                && (horaInicioReunion.isBefore(eventoFin) || horaInicioReunion.equals(eventoFin));
+
+        boolean finReunionEntreEvento = (horaFinReunion.isAfter(eventoInicio) || horaFinReunion.equals(eventoInicio))
+                && (horaFinReunion.isBefore(eventoFin) || horaFinReunion.equals(eventoFin));
+
+        boolean eventoEntreReunion = (horaInicioReunion.isBefore(eventoInicio) && eventoInicio.isBefore(horaFinReunion)) ||
+                (horaInicioReunion.isBefore(eventoFin) && eventoFin.isBefore(horaFinReunion));
+
+        return inicioReunionEntreEvento || finReunionEntreEvento || eventoEntreReunion;
     }
+
+
 }

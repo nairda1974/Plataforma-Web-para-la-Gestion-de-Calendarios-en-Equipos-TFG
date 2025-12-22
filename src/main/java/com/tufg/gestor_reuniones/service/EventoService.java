@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
+import java.text.Normalizer;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
@@ -71,13 +72,20 @@ public class EventoService {
     private String generarEnlacePublico(String nombre){
         String direccionNombre = nombre.toLowerCase().replace(" ","-");
         String enlace = enlacePublico + direccionNombre;
-        ByteBuffer enlaceBuffer = StandardCharsets.UTF_8.encode(enlace);
-        String enlaceUTF8 = StandardCharsets.UTF_8.decode(enlaceBuffer).toString();
-        Long numeroCoincidencias = eventoRepository.countByEnlacePublicoStartingWith(enlaceUTF8);
+        enlace = enlace.replaceAll("[á]", "a")
+                .replaceAll("[é]", "e")
+                .replaceAll("[í]", "i")
+                .replaceAll("[ó]", "o")
+                .replaceAll("[úü]", "u")
+                .replaceAll("[ñ]", "n")
+                .replaceAll("[ç]", "c")
+                .replaceAll("\\s+", "-");
+
+        Long numeroCoincidencias = eventoRepository.countByEnlacePublicoStartingWith(enlace);
         if(numeroCoincidencias > 0){
-            enlaceUTF8 = enlaceUTF8.concat("-"+ (numeroCoincidencias+1));
+            enlace = enlace.concat("-"+ (numeroCoincidencias+1));
         }
-        return enlaceUTF8;
+        return enlace;
     }
 
     public List<Evento> obtenerTablaEvento(){
