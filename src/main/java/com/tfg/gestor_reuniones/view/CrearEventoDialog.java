@@ -107,13 +107,13 @@ public class CrearEventoDialog extends Dialog {
         desplegableUsuarios.setSizeFull();
         desplegableUsuarios.setPlaceholder("--Seleccione los participantes--");
         desplegableUsuarios.setClearButtonVisible(true);
-        desplegableUsuarios.addValueChangeListener(error -> {
-            if(error.getValue().size() > 2)
-                desplegableUsuarios.setInvalid(true);
-            else
-                desplegableUsuarios.setInvalid(false);
-        });
-        desplegableUsuarios.setErrorMessage("No se puede a\u00F1adir mas de dos anfitriones.");
+//        desplegableUsuarios.addValueChangeListener(error -> {
+//            if(error.getValue().size() > 2)
+//                desplegableUsuarios.setInvalid(true);
+//            else
+//                desplegableUsuarios.setInvalid(false);
+//        });
+//        desplegableUsuarios.setErrorMessage("No se puede a\u00F1adir mas de dos anfitriones.");
 
         return desplegableUsuarios;
     }
@@ -205,10 +205,10 @@ public class CrearEventoDialog extends Dialog {
             error = true;
             Notification.show("La descripci\u00F3n de la reuni\u00F3n no debe superar los 1500 car\u00E1cteres.");
         }
-        if(this.desplegableUsuario.getValue().size() > 2){
-            error = true;
-            Notification.show("No se puede a\u00F1adir mas de dos anfitriones.");
-        }
+//        if(this.desplegableUsuario.getValue().size() > 2){
+//            error = true;
+//            Notification.show("No se puede a\u00F1adir mas de dos anfitriones.");
+//        }
 
         if(this.desplegableDuracion.isEmpty()){
             error = true;
